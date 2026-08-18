@@ -176,12 +176,14 @@
 
   .gear-btn{
     position:absolute; top:10px; right:10px; z-index:12;
-    width:30px; height:30px; border-radius:50%;
+    width:28px; height:28px; border-radius:50%;
     background:var(--surface); border:1px solid var(--line);
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer; box-shadow:var(--shadow-card); font-size:.85rem;
+    cursor:pointer; box-shadow:var(--shadow-card); font-size:.8rem;
   }
   .gear-btn[hidden]{ display:none; }
+  /* Clearance so top-of-screen controls never sit under the floating gear button */
+  .month-row, .add-head{ padding-right:34px; }
 
   .tabbar{
     display:flex;
@@ -1722,6 +1724,8 @@
     if(name!=='settings'){
       document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.target===name));
     }
+    const gear = document.getElementById('gearBtn');
+    if(!gear.dataset.appHidden) gear.hidden = (name==='settings');
   }
   document.getElementById('tabbar').addEventListener('click', e=>{
     const btn = e.target.closest('.tab');
@@ -1761,7 +1765,7 @@
       authEl.classList.remove('hidden');
       obEl.classList.add('hidden');
       tabbar.style.opacity = '0'; tabbar.style.pointerEvents = 'none';
-      gear.hidden = true;
+      gear.dataset.appHidden = '1'; gear.hidden = true;
       return;
     }
     authEl.classList.add('hidden');
@@ -1769,12 +1773,14 @@
     if(!window.__onboardingDone){
       obEl.classList.remove('hidden');
       tabbar.style.opacity = '0'; tabbar.style.pointerEvents = 'none';
-      gear.hidden = true;
+      gear.dataset.appHidden = '1'; gear.hidden = true;
       return;
     }
     obEl.classList.add('hidden');
     tabbar.style.opacity = '1'; tabbar.style.pointerEvents = 'auto';
-    gear.hidden = false;
+    delete gear.dataset.appHidden;
+    const activeScreen = document.querySelector('.screen.active');
+    gear.hidden = !!(activeScreen && activeScreen.dataset.screen==='settings');
     document.getElementById('incomeInput').value = fmtInput(window.__income);
     document.getElementById('settingsUsername').textContent = session.username;
     setThemeChoice(window.__theme==='light'||window.__theme==='dark' ? window.__theme : 'auto');
