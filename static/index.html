@@ -280,6 +280,11 @@
     transition: border-color .15s ease, background .15s ease, transform .1s ease;
   }
   .chip.selected{ border-color:currentColor; background:color-mix(in srgb, currentColor 16%, var(--surface)); font-weight:700; }
+  .chip-new{ border-style:dashed; opacity:.85; }
+  .cat-manage-row{ display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:.82rem; }
+  .cat-manage-row:last-child{ border-bottom:none; }
+  .cat-manage-row .cat-del{ background:none; border:none; color:var(--muted); font-size:.68rem; font-weight:600; cursor:pointer; text-decoration:underline; }
+  .cat-manage-row .cat-del:hover{ color:var(--danger); }
   .chip:active{ transform:scale(.95); }
   .field{ display:flex; flex-direction:column; gap:4px; }
   .field label{ font-size:.68rem; color:var(--muted); font-weight:600; }
@@ -765,6 +770,12 @@
         </div>
 
         <div class="card">
+          <div class="section-head"><h2>Your categories</h2></div>
+          <p class="hint" style="text-align:left; margin:6px 0 8px;">Custom categories you've added, per group. Add new ones from the Add screen's "+ New" chip.</p>
+          <div id="categoryManage"></div>
+        </div>
+
+        <div class="card">
           <div class="section-head"><h2>Your data</h2></div>
           <button type="button" class="link-btn" id="viewDataBtn">View personal data</button>
           <button type="button" class="link-btn" id="downloadDataBtn">Download my data (.json)</button>
@@ -892,11 +903,15 @@
     wants:   { label:'Wants',          color:'var(--tan)',  soft:'var(--tan-soft)',  hex:'#C1863C', limit:1200 },
     savings: { label:'Savings & Debt', color:'var(--wine)', soft:'var(--wine-soft)', hex:'#96507A', limit:800 }
   };
-  const categories = {
-    needs:   ['Housing','Groceries','Utilities','Transport','Insurance'],
-    wants:   ['Dining','Shopping','Subscriptions','Entertainment'],
-    savings: ['Emergency Fund','Investing','Extra Debt Payment']
+  const defaultCategories = {
+    needs:   ['Housing','Groceries','Utilities','Transport','Insurance','Debt Payments','Healthcare','Childcare','Phone & Internet'],
+    wants:   ['Dining','Shopping','Subscriptions','Entertainment','Travel','Hobbies','Gifts','Personal Care','Fitness'],
+    savings: ['Emergency Fund','Investing','Extra Debt Payment','Retirement','Education Fund']
   };
+  let customCategories = { needs:[], wants:[], savings:[] }; // [{id,name}] per group, from server
+  function categoryNamesFor(g){
+    return defaultCategories[g].concat(customCategories[g].map(c=>c.name));
+  }
 
   const now = new Date();
   const REAL = { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
@@ -936,6 +951,10 @@
     window.__onboardingDone = !!d.settings.onboarding_done;
     window.__income = d.settings.income;
     window.__theme = d.settings.theme;
+    if(d.custom_categories){
+      customCategories = { needs:[], wants:[], savings:[] };
+      d.custom_categories.forEach(c=>{ if(customCategories[c.group]) customCategories[c.group].push({id:c.id, name:c.name}); });
+    }
   }
 
   async function loadData(){
@@ -1109,19 +1128,61 @@
 
   /* ---------- ADD SCREEN ---------- */
   function renderChips(){
-    Object.keys(categories).forEach(g=>{
+    const selectedCat = addState.cat, selectedGroup = addState.group;
+    Object.keys(defaultCategories).forEach(g=>{
       const wrap = document.querySelector(`.chips[data-group="${g}"]`);
-      wrap.innerHTML = categories[g].map(c=>`<button type="button" class="chip" data-group="${g}" data-cat="${c}" style="color:${groups[g].hex}">${c}</button>`).join('');
+      const names = categoryNamesFor(g);
+      wrap.innerHTML = names.map(c=>`<button type="button" class="chip" data-group="${g}" data-cat="${c}" style="color:${groups[g].hex}">${esc(c)}</button>`).join('')
+        + `<button type="button" class="chip chip-new" data-newcat="${g}" style="color:${groups[g].hex}">+ New</button>`;
     });
-    document.querySelectorAll('.chip').forEach(btn=>{
+    document.querySelectorAll('.chip[data-cat]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        document.querySelectorAll('.chip').forEach(b=>b.classList.remove('selected'));
+        document.querySelectorAll('.chip[data-cat]').forEach(b=>b.classList.remove('selected'));
         btn.classList.add('selected');
         addState.group = btn.dataset.group;
         addState.cat = btn.dataset.cat;
         updateSaveState();
       });
+      if(btn.dataset.group===selectedGroup && btn.dataset.cat===selectedCat) btn.classList.add('selected');
     });
+    document.querySelectorAll('[data-newcat]').forEach(btn=>{
+      btn.addEventListener('click', ()=>openNewCategoryPrompt(btn.dataset.newcat));
+    });
+  }
+
+  function renderCategorySettings(){
+    const wrap = document.getElementById('categoryManage');
+    const rows = [];
+    Object.keys(groups).forEach(g=>{
+      customCategories[g].forEach(c=>{
+        rows.push(`<div class="cat-manage-row"><span>${esc(c.name)} <span class="hint" style="display:inline;">(${groups[g].label})</span></span><button type="button" class="cat-del" data-catdel="${c.id}">Delete</button></div>`);
+      });
+    });
+    wrap.innerHTML = rows.join('') || '<p class="hint" style="text-align:left; padding:2px 0;">No custom categories yet.</p>';
+    wrap.querySelectorAll('[data-catdel]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        try{
+          const d = await api('/api/category/'+btn.dataset.catdel, 'DELETE');
+          syncFromServer(d);
+          renderChips();
+          renderCategorySettings();
+          showToast('Category deleted');
+        }catch(e){ showToast(e.message); }
+      });
+    });
+  }
+
+  function openNewCategoryPrompt(group){
+    const name = (prompt(`New ${groups[group].label} category name:`) || '').trim();
+    if(!name) return;
+    api('/api/category','POST',{group, name}).then(d=>{
+      syncFromServer(d);
+      renderChips();
+      renderCategorySettings();
+      addState.group = group; addState.cat = name;
+      document.querySelectorAll('.chip[data-cat]').forEach(b=>b.classList.toggle('selected', b.dataset.group===group && b.dataset.cat===name));
+      updateSaveState();
+    }).catch(e=>showToast(e.message));
   }
   function formatAmountDisplay(str){
     if(str==='') return '0';
@@ -1371,7 +1432,7 @@
     {dh:-18, ds:0.10, dl:0.22}, {dh:20,  ds:0.02, dl:-0.20}
   ];
   function categoryColor(group, key){
-    let idx = categories[group].indexOf(key);
+    let idx = categoryNamesFor(group).indexOf(key);
     if(idx===-1){
       let h=0; for(let i=0;i<key.length;i++) h=(h*31+key.charCodeAt(i))>>>0;
       idx = 1 + (h % CATEGORY_VARIANTS.length);
@@ -1662,9 +1723,11 @@
     document.getElementById('settingsUsername').textContent = session.username;
     setThemeChoice(window.__theme==='light'||window.__theme==='dark' ? window.__theme : 'auto');
     renderRings();
+    renderChips();
     refreshDashboard();
     renderLimits();
     renderGoals();
+    renderCategorySettings();
   }
 
   if(window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)){

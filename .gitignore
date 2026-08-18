@@ -3,3 +3,9 @@ server.log
 __pycache__/
 *.pyc
 .DS_Store
+
+# Xcode local state — not meant to be shared/versioned
+Sprout/Sprout.xcodeproj/xcuserdata/
+Sprout/Sprout.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+DerivedData/

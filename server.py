@@ -36,6 +36,13 @@ MAX_BODY = 1_000_000
 
 USERNAME_RE = re.compile(r'^[A-Za-z0-9_.-]{3,32}$')
 GROUPS = ('needs', 'wants', 'savings')
+DEFAULT_CATEGORIES = {
+    'needs': ['Housing', 'Groceries', 'Utilities', 'Transport', 'Insurance',
+              'Debt Payments', 'Healthcare', 'Childcare', 'Phone & Internet'],
+    'wants': ['Dining', 'Shopping', 'Subscriptions', 'Entertainment', 'Travel',
+              'Hobbies', 'Gifts', 'Personal Care', 'Fitness'],
+    'savings': ['Emergency Fund', 'Investing', 'Extra Debt Payment', 'Retirement', 'Education Fund'],
+}
 
 
 def now_utc():
@@ -95,6 +102,12 @@ def init_db():
         saved REAL NOT NULL DEFAULT 0,
         target REAL NOT NULL,
         date TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS custom_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        grp TEXT NOT NULL,
+        name TEXT NOT NULL
     );
     ''')
     conn.commit()
@@ -239,6 +252,7 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/logout': self.api_logout,
                 '/api/expense': self.api_add_expense,
                 '/api/goal': self.api_add_goal,
+                '/api/category': self.api_add_category,
                 '/api/password': self.api_change_password,
                 '/api/import': self.api_import,
             }
@@ -268,6 +282,9 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r'^/api/goal/(\d+)$', path)
             if m:
                 return self.api_delete_goal(int(m.group(1)))
+            m = re.match(r'^/api/category/(\d+)$', path)
+            if m:
+                return self.api_delete_category(int(m.group(1)))
             if path == '/api/account':
                 return self.api_delete_account()
             self._send_json(404, {'error': 'not found'})
@@ -417,6 +434,8 @@ class Handler(BaseHTTPRequestHandler):
                             'WHERE user_id = ? ORDER BY id', (user['id'],)).fetchall()
         goals = conn.execute('SELECT id, emoji, name, saved, target, date FROM goals '
                               'WHERE user_id = ? ORDER BY id', (user['id'],)).fetchall()
+        cats = conn.execute('SELECT id, grp AS "group", name FROM custom_categories '
+                             'WHERE user_id = ? ORDER BY id', (user['id'],)).fetchall()
         return {
             'username': user['username'],
             'settings': {
@@ -429,6 +448,8 @@ class Handler(BaseHTTPRequestHandler):
             },
             'transactions': [dict(r) for r in txs],
             'goals': [dict(r) for r in goals],
+            'default_categories': DEFAULT_CATEGORIES,
+            'custom_categories': [dict(r) for r in cats],
         }
 
     def api_update_settings(self):
@@ -594,6 +615,45 @@ class Handler(BaseHTTPRequestHandler):
                 'INSERT INTO transactions (user_id, cat, grp, amt, note, y, m, d) VALUES (?,?,?,?,?,?,?,?)',
                 (user['id'], goal['name'], 'savings', added, '', today.year, today.month - 1, today.day)
             )
+            conn.commit()
+            self._send_json(200, self._full_state(conn, user))
+        finally:
+            conn.close()
+
+    def api_add_category(self):
+        conn = get_db()
+        try:
+            user = self._current_user(conn)
+            if not user:
+                raise ApiError(401, 'not signed in')
+            body = self._read_json()
+            grp = require_str(body, 'group', 1, 20)
+            if grp not in GROUPS:
+                raise ApiError(400, 'group must be needs, wants, or savings')
+            name = require_str(body, 'name', 1, 40)
+            existing_default = [c.lower() for c in DEFAULT_CATEGORIES[grp]]
+            existing_custom = [r['name'].lower() for r in conn.execute(
+                'SELECT name FROM custom_categories WHERE user_id = ? AND grp = ?', (user['id'], grp)).fetchall()]
+            if name.lower() in existing_default or name.lower() in existing_custom:
+                raise ApiError(409, f'"{name}" already exists in that group')
+            conn.execute('INSERT INTO custom_categories (user_id, grp, name) VALUES (?, ?, ?)',
+                         (user['id'], grp, name))
+            conn.commit()
+            self._send_json(200, self._full_state(conn, user))
+        finally:
+            conn.close()
+
+    def api_delete_category(self, cat_id):
+        conn = get_db()
+        try:
+            user = self._current_user(conn)
+            if not user:
+                raise ApiError(401, 'not signed in')
+            row = conn.execute('SELECT id FROM custom_categories WHERE id = ? AND user_id = ?',
+                                (cat_id, user['id'])).fetchone()
+            if not row:
+                raise ApiError(404, 'category not found')
+            conn.execute('DELETE FROM custom_categories WHERE id = ?', (cat_id,))
             conn.commit()
             self._send_json(200, self._full_state(conn, user))
         finally:
