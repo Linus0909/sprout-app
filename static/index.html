@@ -182,8 +182,11 @@
     cursor:pointer; box-shadow:var(--shadow-card); font-size:.8rem;
   }
   .gear-btn[hidden]{ display:none; }
-  /* Clearance so top-of-screen controls never sit under the floating gear button */
-  .month-row, .add-head{ padding-right:34px; }
+  /* Clearance so top-of-screen controls never sit under the floating gear button.
+     month-row gets matching left padding too, so its centered date stays
+     visually centered on the screen rather than skewed by one-sided padding. */
+  .add-head{ padding-right:34px; }
+  .month-row{ padding:0 34px; }
 
   .tabbar{
     display:flex;
