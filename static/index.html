@@ -168,8 +168,8 @@
     flex-direction:column;
     height:100%;
     overflow-y:auto;
-    padding:18px 16px 14px;
-    gap:16px;
+    padding:10px 14px 6px;
+    gap:9px;
   }
   .screen.active{ display:flex; }
   .screen::-webkit-scrollbar{ width:0; }
@@ -187,96 +187,98 @@
     display:flex;
     justify-content:space-around;
     align-items:center;
-    padding:10px 4px 2px;
+    padding:5px 4px;
   }
   .tab{
     background:none; border:none; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:4px;
-    padding:6px 10px; border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:4px 8px; border-radius:12px;
     color:var(--muted);
-    font-size:.66rem; letter-spacing:.02em;
+    font-size:.58rem; letter-spacing:.02em;
     transform:scale(1); transition:color .15s ease, background .15s ease, transform .1s ease;
   }
-  .tab svg{ width:20px; height:20px; }
+  .tab svg{ width:17px; height:17px; }
   .tab.active{ color:var(--brand); background:var(--brand-soft); }
   .tab:active{ transform:scale(.94); }
 
   .eyebrow{
-    font-size:.68rem; letter-spacing:.09em; text-transform:uppercase;
+    font-size:.58rem; letter-spacing:.08em; text-transform:uppercase;
     color:var(--muted); font-weight:600;
   }
   .screen-title{
-    font-family:var(--font-display); font-weight:700; font-size:1.35rem; margin:0;
+    font-family:var(--font-display); font-weight:700; font-size:1.1rem; margin:0;
     letter-spacing:-.01em; color:var(--ink); text-wrap:balance;
   }
   .card{
     background:var(--surface);
-    border-radius:20px;
-    padding:16px;
+    border-radius:15px;
+    padding:11px 12px;
     box-shadow:var(--shadow-card);
   }
 
   .month-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .month-row .navbtn{
-    width:26px; height:26px; border-radius:50%; border:1px solid var(--line);
+    width:22px; height:22px; border-radius:50%; border:1px solid var(--line);
     background:var(--surface); display:flex; align-items:center; justify-content:center;
     cursor:pointer; color:var(--muted); flex:none;
   }
   .month-row .navbtn:disabled{ opacity:.3; cursor:default; }
   .total-figure{
-    font-family:var(--font-display); font-size:2.5rem; font-weight:800;
-    margin:2px 0 0; font-variant-numeric:tabular-nums; letter-spacing:-.02em;
+    font-family:var(--font-display); font-size:1.9rem; font-weight:800;
+    margin:0; font-variant-numeric:tabular-nums; letter-spacing:-.02em;
   }
-  .total-caption{ color:var(--muted); font-size:.8rem; margin-top:2px;}
+  .total-caption{ color:var(--muted); font-size:.72rem; margin-top:1px;}
 
-  .ring-row{ display:flex; gap:10px; }
-  .ring-card{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; padding:14px 8px; }
-  .ring-wrap{ position:relative; width:74px; height:74px; }
+  .ring-row{ display:flex; gap:8px; }
+  .ring-card{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:7px 4px; }
+  .ring-wrap{ position:relative; width:52px; height:52px; }
   .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
   .ring-center{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     flex-direction:column;
   }
-  .ring-center .pct{ font-size:.92rem; font-weight:700; font-variant-numeric:tabular-nums; }
-  .ring-label{ display:flex; align-items:center; gap:5px; font-size:.72rem; font-weight:600; }
-  .dot{ width:8px; height:8px; border-radius:50%; flex:none; }
-  .ring-amt{ font-size:.68rem; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .ring-center .pct{ font-size:.72rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .ring-label{ display:flex; align-items:center; gap:4px; font-size:.64rem; font-weight:600; }
+  .dot{ width:7px; height:7px; border-radius:50%; flex:none; }
+  .ring-amt{ font-size:.58rem; color:var(--muted); font-variant-numeric:tabular-nums; }
 
   .section-head{ display:flex; align-items:baseline; justify-content:space-between; }
-  .section-head h2{ font-family:var(--font-display); font-weight:700; font-size:1.02rem; margin:0; }
-  .link-btn{ background:none; border:none; color:var(--brand); font-size:.8rem; font-weight:600; cursor:pointer; padding:6px 0; text-align:left; }
+  .section-head h2{ font-family:var(--font-display); font-weight:700; font-size:.88rem; margin:0; }
+  .link-btn{ background:none; border:none; color:var(--brand); font-size:.78rem; font-weight:600; cursor:pointer; padding:4px 0; text-align:left; }
 
-  .tx-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .tx-row{ display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line); }
   .tx-row:last-child{ border-bottom:none; }
-  .tx-icon{ width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.85rem; flex:none; }
+  .tx-icon{ width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.68rem; flex:none; }
   .tx-info{ flex:1; min-width:0; }
-  .tx-name{ font-size:.85rem; font-weight:600; }
-  .tx-meta{ font-size:.7rem; color:var(--muted); }
-  .tx-amt{ font-size:.85rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .tx-name{ font-size:.76rem; font-weight:600; }
+  .tx-meta{ font-size:.62rem; color:var(--muted); }
+  .tx-amt{ font-size:.76rem; font-weight:700; font-variant-numeric:tabular-nums; }
 
   .insight-card{ background:linear-gradient(180deg, var(--brand-soft), transparent 130%); }
-  .insight-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; }
+  .insight-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; }
   .insight-row input{
-    width:110px; text-align:right; font-family:var(--font-display); font-size:1.1rem;
+    width:100px; text-align:right; font-family:var(--font-display); font-size:.95rem;
     border:none; background:none; color:var(--brand); font-weight:600;
     font-variant-numeric:tabular-nums;
   }
-  .split-bar{ display:flex; height:10px; border-radius:999px; overflow:hidden; margin-top:12px; }
-  .split-legend{ display:flex; justify-content:space-between; margin-top:8px; font-size:.68rem; color:var(--muted); }
-  .split-legend span{ display:flex; align-items:center; gap:4px; }
+  .split-bar{ display:flex; height:7px; border-radius:999px; overflow:hidden; margin-top:6px; }
+  .split-legend{ display:flex; justify-content:space-between; margin-top:5px; font-size:.6rem; color:var(--muted); }
+  .split-legend span{ display:flex; align-items:center; gap:3px; }
 
-  .amount-display{ text-align:center; padding:6px 0 2px; }
-  .amount-display .cur{ font-size:1.2rem; vertical-align:top; color:var(--muted); margin-right:2px;}
+  .add-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .add-head .screen-title{ margin:0; }
+  .amount-display{ text-align:center; padding:2px 0 0; }
+  .amount-display .cur{ font-size:1rem; vertical-align:top; color:var(--muted); margin-right:2px;}
   .amount-display .num{
-    font-family:var(--font-display); font-size:2.9rem; font-weight:800;
+    font-family:var(--font-display); font-size:2.1rem; font-weight:800;
     letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:var(--ink);
   }
-  .chip-group{ display:flex; flex-direction:column; gap:8px; }
-  .chip-group .glabel{ font-size:.68rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px;}
-  .chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip-group{ display:flex; flex-direction:column; gap:4px; }
+  .chip-group .glabel{ font-size:.6rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:5px;}
+  .chips{ display:flex; flex-wrap:wrap; gap:5px; }
   .chip{
     border:1px solid var(--line); background:var(--surface); border-radius:999px;
-    padding:7px 12px; font-size:.78rem; cursor:pointer; color:var(--ink);
+    padding:4px 9px; font-size:.68rem; cursor:pointer; color:var(--ink);
     transition: border-color .15s ease, background .15s ease, transform .1s ease;
   }
   .chip.selected{ border-color:currentColor; background:color-mix(in srgb, currentColor 16%, var(--surface)); font-weight:700; }
@@ -286,21 +288,21 @@
   .cat-manage-row .cat-del{ background:none; border:none; color:var(--muted); font-size:.68rem; font-weight:600; cursor:pointer; text-decoration:underline; }
   .cat-manage-row .cat-del:hover{ color:var(--danger); }
   .chip:active{ transform:scale(.95); }
-  .field{ display:flex; flex-direction:column; gap:4px; }
-  .field label{ font-size:.68rem; color:var(--muted); font-weight:600; }
+  .field{ display:flex; flex-direction:column; gap:3px; }
+  .field label{ font-size:.62rem; color:var(--muted); font-weight:600; }
   .field input[type=text], .field input[type=date], .field input[type=password]{
-    border:1px solid var(--line); border-radius:12px; padding:9px 11px; font-size:.85rem;
+    border:1px solid var(--line); border-radius:10px; padding:6px 10px; font-size:.8rem;
     background:var(--surface); color:var(--ink); font-family:var(--font-body); width:100%;
   }
-  .keypad{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .keypad{ display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
   .keypad button{
     border:none; background:var(--surface); border:1px solid var(--line);
-    border-radius:14px; padding:11px 0; font-size:1.05rem; cursor:pointer;
+    border-radius:11px; padding:6px 0; font-size:.92rem; cursor:pointer;
     font-family:var(--font-display);
   }
   .keypad button:active{ background:var(--tan-soft); }
   .save-btn{
-    border:none; border-radius:14px; padding:13px; font-size:.9rem; font-weight:700;
+    border:none; border-radius:12px; padding:9px; font-size:.84rem; font-weight:700;
     background:var(--brand); color:#fff; cursor:pointer; letter-spacing:.01em;
     transition:opacity .15s ease, transform .1s ease; width:100%;
   }
@@ -309,49 +311,49 @@
   .save-btn.danger{ background:var(--danger); }
   .save-btn.ghost{ background:var(--surface-alt); color:var(--ink); border:1px solid var(--line); }
 
-  .limit-card{ display:flex; flex-direction:column; gap:10px; }
+  .limit-card{ display:flex; flex-direction:column; gap:5px; }
   .limit-head{ display:flex; align-items:center; justify-content:space-between; }
-  .limit-name{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:.9rem; }
-  .limit-nums{ font-size:.78rem; font-variant-numeric:tabular-nums; color:var(--muted); text-align:right;}
+  .limit-name{ display:flex; align-items:center; gap:6px; font-weight:700; font-size:.78rem; }
+  .limit-nums{ font-size:.68rem; font-variant-numeric:tabular-nums; color:var(--muted); text-align:right;}
   .limit-nums b{ color:var(--ink); }
   .limit-input{
-    width:56px; text-align:right; border:none; border-bottom:1px dashed var(--line);
-    background:none; font-weight:700; font-family:var(--font-body); font-size:.78rem;
+    width:50px; text-align:right; border:none; border-bottom:1px dashed var(--line);
+    background:none; font-weight:700; font-family:var(--font-body); font-size:.68rem;
     color:var(--ink); font-variant-numeric:tabular-nums; padding:0 1px 1px;
   }
   .limit-input:focus{ outline:none; border-bottom-color:var(--brand); }
-  .bar-track{ height:9px; border-radius:999px; background:var(--line); overflow:hidden; }
+  .bar-track{ height:6px; border-radius:999px; background:var(--line); overflow:hidden; }
   .bar-fill{ height:100%; border-radius:999px; transition:width .3s ease, background .3s ease; }
-  .over-flag{ font-size:.7rem; font-weight:700; color:var(--danger); }
+  .over-flag{ font-size:.62rem; font-weight:700; color:var(--danger); }
   .slider-row{ display:flex; align-items:center; gap:8px; }
-  .slider-row input[type=range]{ flex:1; accent-color:var(--ink); }
-  .suggest-row{ display:flex; align-items:center; justify-content:space-between; font-size:.7rem; color:var(--muted); }
-  .suggest-row button{ background:none; border:none; color:var(--brand); font-weight:700; cursor:pointer; font-size:.7rem; }
-  .footnote{ text-align:center; font-size:.75rem; color:var(--muted); font-style:italic; padding:4px 10px 10px; }
+  .slider-row input[type=range]{ flex:1; accent-color:var(--ink); height:16px; }
+  .suggest-row{ display:flex; align-items:center; justify-content:space-between; font-size:.62rem; color:var(--muted); }
+  .suggest-row button{ background:none; border:none; color:var(--brand); font-weight:700; cursor:pointer; font-size:.62rem; }
+  .footnote{ text-align:center; font-size:.66rem; color:var(--muted); font-style:italic; padding:2px 10px 4px; }
 
-  .goal-card{ display:flex; gap:12px; align-items:center; }
-  .goal-emoji{ width:44px; height:44px; border-radius:14px; background:var(--sage-soft); display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex:none; }
+  .goal-card{ display:flex; gap:9px; align-items:center; }
+  .goal-emoji{ width:34px; height:34px; border-radius:11px; background:var(--sage-soft); display:flex; align-items:center; justify-content:center; font-size:1.05rem; flex:none; }
   .goal-info{ flex:1; min-width:0; }
-  .goal-name{ font-weight:700; font-size:.88rem; display:flex; align-items:center; gap:6px; }
-  .goal-badge{ font-size:.62rem; background:var(--sage-soft); color:var(--sage); padding:2px 7px; border-radius:999px; font-weight:700; }
-  .goal-nums{ font-size:.76rem; color:var(--muted); font-variant-numeric:tabular-nums; margin-top:2px;}
-  .goal-bar{ margin-top:6px; }
-  .goal-date{ font-size:.68rem; color:var(--muted); margin-top:4px; }
-  .goal-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex:none; }
+  .goal-name{ font-weight:700; font-size:.78rem; display:flex; align-items:center; gap:5px; }
+  .goal-badge{ font-size:.56rem; background:var(--sage-soft); color:var(--sage); padding:1px 6px; border-radius:999px; font-weight:700; }
+  .goal-nums{ font-size:.66rem; color:var(--muted); font-variant-numeric:tabular-nums; margin-top:1px;}
+  .goal-bar{ margin-top:4px; }
+  .goal-date{ font-size:.6rem; color:var(--muted); margin-top:2px; }
+  .goal-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex:none; }
   .goal-add{
     border:1px solid var(--line); background:var(--surface);
-    border-radius:999px; padding:6px 11px; font-size:.72rem; font-weight:700; cursor:pointer;
+    border-radius:999px; padding:4px 9px; font-size:.64rem; font-weight:700; cursor:pointer;
   }
   .goal-add:disabled{ opacity:.35; cursor:default; }
   .goal-del{
-    background:none; border:none; color:var(--muted); font-size:.68rem; font-weight:600;
-    cursor:pointer; padding:2px 1px; text-decoration:underline; text-underline-offset:2px;
+    background:none; border:none; color:var(--muted); font-size:.6rem; font-weight:600;
+    cursor:pointer; padding:1px; text-decoration:underline; text-underline-offset:2px;
   }
   .goal-del:hover{ color:var(--danger); }
   .new-goal-btn{
-    display:flex; align-items:center; justify-content:center; gap:6px;
-    border:1.5px dashed var(--line); background:none; border-radius:16px;
-    padding:12px; color:var(--muted); font-weight:700; font-size:.8rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+    border:1.5px dashed var(--line); background:none; border-radius:13px;
+    padding:8px; color:var(--muted); font-weight:700; font-size:.72rem; cursor:pointer;
   }
 
   .modal-veil{
@@ -400,8 +402,8 @@
   .goal-add, .new-goal-btn{ transition:transform .1s ease, opacity .15s ease; }
 
   .pace-badge{
-    display:inline-flex; align-items:center; gap:5px; font-size:.68rem; font-weight:700;
-    padding:4px 10px; border-radius:999px; margin-top:8px;
+    display:inline-flex; align-items:center; gap:4px; font-size:.6rem; font-weight:700;
+    padding:3px 8px; border-radius:999px; margin-top:4px;
   }
   .pace-good{ background:var(--sage-soft); color:var(--sage); }
   .pace-warn{ background:var(--tan-soft); color:var(--tan); }
@@ -456,25 +458,25 @@
   .ob-goal-preview b{ display:block; font-size:.88rem; }
   .ob-goal-preview span{ font-size:.75rem; color:var(--muted); }
 
-  .seg-toggle{ display:flex; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:3px; gap:3px; box-shadow:var(--shadow-card); }
+  .seg-toggle{ display:flex; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:2px; gap:2px; box-shadow:var(--shadow-card); }
   .theme-switch{ width:fit-content; }
-  .theme-switch .seg-btn{ padding:7px 12px; }
-  .seg-btn{ flex:1; border:none; background:none; padding:8px 0; border-radius:999px; font-size:.76rem; font-weight:700; color:var(--muted); cursor:pointer; transition:background .15s ease, color .15s ease; }
+  .theme-switch .seg-btn{ padding:5px 10px; }
+  .seg-btn{ flex:1; border:none; background:none; padding:5px 0; border-radius:999px; font-size:.68rem; font-weight:700; color:var(--muted); cursor:pointer; transition:background .15s ease, color .15s ease; }
   .seg-btn.active{ background:var(--brand); color:#fff; }
-  .donut-wrap{ position:relative; width:180px; height:180px; margin:6px auto 2px; }
+  .donut-wrap{ position:relative; width:120px; height:120px; margin:2px auto 0; }
   .donut-wrap svg{ width:100%; height:100%; }
   .donut-wrap circle{ transition:stroke-dasharray .4s ease, stroke-dashoffset .4s ease; }
   .donut-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-  .donut-center .amt{ font-family:var(--font-display); font-size:1.45rem; font-weight:800; letter-spacing:-.01em; font-variant-numeric:tabular-nums; }
-  .donut-center .lbl{ font-size:.66rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-top:2px; }
-  .callout-card{ display:flex; align-items:center; gap:11px; }
-  .callout-card .ce{ font-size:1.35rem; flex:none; }
-  .callout-card .ct{ font-size:.82rem; line-height:1.4; }
-  .legend-row{ display:flex; align-items:center; gap:9px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .donut-center .amt{ font-family:var(--font-display); font-size:1.05rem; font-weight:800; letter-spacing:-.01em; font-variant-numeric:tabular-nums; }
+  .donut-center .lbl{ font-size:.54rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-top:1px; }
+  .callout-card{ display:flex; align-items:center; gap:8px; }
+  .callout-card .ce{ font-size:1.1rem; flex:none; }
+  .callout-card .ct{ font-size:.7rem; line-height:1.3; }
+  .legend-row{ display:flex; align-items:center; gap:7px; padding:4px 0; border-bottom:1px solid var(--line); }
   .legend-row:last-child{ border-bottom:none; }
-  .legend-row .ln{ flex:1; font-size:.82rem; font-weight:600; }
-  .legend-row .lp{ font-size:.72rem; color:var(--muted); width:34px; text-align:right; }
-  .legend-row .la{ font-size:.82rem; font-weight:700; font-variant-numeric:tabular-nums; width:66px; text-align:right; }
+  .legend-row .ln{ flex:1; font-size:.7rem; font-weight:600; }
+  .legend-row .lp{ font-size:.62rem; color:var(--muted); width:30px; text-align:right; }
+  .legend-row .la{ font-size:.7rem; font-weight:700; font-variant-numeric:tabular-nums; width:58px; text-align:right; }
 
   .auth-error{ color:var(--danger); font-size:.78rem; text-align:center; display:none; }
   .settings-danger{ border:1px solid var(--danger); }
@@ -693,20 +695,35 @@
 
       <!-- ADD -->
       <section class="screen" data-screen="add">
-        <div class="screen-title">Add expense</div>
+        <div class="add-head">
+          <div class="screen-title">Add</div>
+          <div class="seg-toggle" id="addModeToggle">
+            <button type="button" class="seg-btn active" data-addmode="expense">Expense</button>
+            <button type="button" class="seg-btn" data-addmode="income">Income</button>
+          </div>
+        </div>
         <div class="amount-display"><span class="cur">$</span><span class="num" id="amountDisplay">0</span></div>
 
-        <div class="chip-group">
-          <div class="glabel"><i class="dot" style="background:var(--sage);"></i>Needs</div>
-          <div class="chips" data-group="needs"></div>
+        <div id="expenseFields">
+          <div class="chip-group">
+            <div class="glabel"><i class="dot" style="background:var(--sage);"></i>Needs</div>
+            <div class="chips" data-group="needs"></div>
+          </div>
+          <div class="chip-group">
+            <div class="glabel"><i class="dot" style="background:var(--tan);"></i>Wants</div>
+            <div class="chips" data-group="wants"></div>
+          </div>
+          <div class="chip-group">
+            <div class="glabel"><i class="dot" style="background:var(--wine);"></i>Savings &amp; Debt</div>
+            <div class="chips" data-group="savings"></div>
+          </div>
         </div>
-        <div class="chip-group">
-          <div class="glabel"><i class="dot" style="background:var(--tan);"></i>Wants</div>
-          <div class="chips" data-group="wants"></div>
-        </div>
-        <div class="chip-group">
-          <div class="glabel"><i class="dot" style="background:var(--wine);"></i>Savings &amp; Debt</div>
-          <div class="chips" data-group="savings"></div>
+
+        <div id="incomeFields" hidden>
+          <div class="chip-group">
+            <div class="glabel"><i class="dot" style="background:var(--brand);"></i>Income source</div>
+            <div class="chips" id="incomeChips"></div>
+          </div>
         </div>
 
         <div class="field">
@@ -923,9 +940,11 @@
   let session = null;
   let transactions = [];
   let goals = [];
-  let addState = { group:null, cat:null, amount:'' };
+  let addState = { mode:'expense', group:null, cat:null, amount:'' };
+  const incomeCategories = ['Paycheck','Bonus','Gift','Side Income','Refund','Other'];
   function round50(n){ return Math.max(50, Math.round(n/50)*50); }
   function txInView(){ return transactions.filter(t=>t.y===viewY && t.m===viewM); }
+  function spendOnly(list){ return list.filter(t=>t.group!=='income'); }
   function spentOf(g){ return txInView().filter(t=>t.group===g).reduce((s,t)=>s+t.amt,0); }
 
   /* ---------- API ---------- */
@@ -1047,7 +1066,7 @@
       const conf = groups[g];
       return `<div class="ring-card">
         <div class="ring-wrap">
-          ${ringSVG('ring-'+g, 74, 8)}
+          ${ringSVG('ring-'+g, 52, 6)}
           <div class="ring-center"><span class="pct" id="ringpct-${g}">0%</span></div>
         </div>
         <div class="ring-label" style="color:${conf.hex}"><i class="dot" style="background:${conf.hex}"></i>${conf.label.split(' ')[0]}</div>
@@ -1062,13 +1081,14 @@
     document.getElementById('nextMonthBtn').disabled = isCurrent;
 
     const inView = txInView();
-    const total = inView.reduce((s,t)=>s+t.amt,0);
+    const spending = spendOnly(inView);
+    const total = spending.reduce((s,t)=>s+t.amt,0);
     document.getElementById('dashTotal').textContent = fmt(total);
-    document.getElementById('dashCaption').textContent = `spent across ${inView.length} transaction${inView.length===1?'':'s'}`;
+    document.getElementById('dashCaption').textContent = `spent across ${spending.length} transaction${spending.length===1?'':'s'}`;
 
     const badge = document.getElementById('paceBadge');
     const totalLimit = Object.values(groups).reduce((s,g)=>s+g.limit,0);
-    if(!isCurrent || inView.length===0 || totalLimit<=0){
+    if(!isCurrent || spending.length===0 || totalLimit<=0){
       badge.textContent = ''; badge.className = 'pace-badge';
     } else {
       const expected = REAL.d/daysInMonth(REAL.y,REAL.m);
@@ -1091,14 +1111,15 @@
     const list = document.getElementById('txList');
     const recent = inView.slice().reverse().slice(0,6);
     list.innerHTML = recent.map(t=>{
-      const conf = groups[t.group];
+      const isIncome = t.group==='income';
+      const conf = isIncome ? {soft:'var(--brand-soft)', hex:'var(--brand)'} : groups[t.group];
       return `<div class="tx-row">
-        <div class="tx-icon" style="background:${conf.soft}; color:${conf.hex};">${esc(t.cat[0])}</div>
+        <div class="tx-icon" style="background:${conf.soft}; color:${conf.hex};">${isIncome?'+':esc(t.cat[0])}</div>
         <div class="tx-info">
           <div class="tx-name">${esc(t.cat)}${t.note?' · '+esc(t.note):''}</div>
           <div class="tx-meta">${shortDateOf(t.y,t.m,t.d)}</div>
         </div>
-        <div class="tx-amt">${fmt(t.amt)}</div>
+        <div class="tx-amt" style="${isIncome?'color:var(--brand);':''}">${isIncome?'+':''}${fmt(t.amt)}</div>
       </div>`;
     }).join('') || `<p class="hint" style="padding:12px 0;">🌱 Nothing logged ${isCurrent?'yet':'this month'} — ${isCurrent?'tap Add to log your first expense.':'browse another month or add one now.'}</p>`;
 
@@ -1148,7 +1169,34 @@
     document.querySelectorAll('[data-newcat]').forEach(btn=>{
       btn.addEventListener('click', ()=>openNewCategoryPrompt(btn.dataset.newcat));
     });
+
+    const incomeWrap = document.getElementById('incomeChips');
+    incomeWrap.innerHTML = incomeCategories.map(c=>`<button type="button" class="chip" data-incomecat="${c}" style="color:var(--brand)">${c}</button>`).join('');
+    incomeWrap.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        incomeWrap.querySelectorAll('.chip').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        addState.cat = btn.dataset.incomecat;
+        updateSaveState();
+      });
+      if(addState.mode==='income' && btn.dataset.incomecat===addState.cat) btn.classList.add('selected');
+    });
   }
+
+  function setAddMode(mode){
+    addState.mode = mode;
+    addState.group = null; addState.cat = null;
+    document.querySelectorAll('#addModeToggle .seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.addmode===mode));
+    document.getElementById('expenseFields').hidden = mode!=='expense';
+    document.getElementById('incomeFields').hidden = mode!=='income';
+    document.querySelectorAll('.chip[data-cat], .chip[data-incomecat]').forEach(b=>b.classList.remove('selected'));
+    document.getElementById('saveBtn').textContent = mode==='income' ? 'Save income' : 'Save expense';
+    updateSaveState();
+  }
+  document.getElementById('addModeToggle').addEventListener('click', e=>{
+    const btn = e.target.closest('.seg-btn');
+    if(btn) setAddMode(btn.dataset.addmode);
+  });
 
   function renderCategorySettings(){
     const wrap = document.getElementById('categoryManage');
@@ -1213,7 +1261,8 @@
     document.getElementById('saveBtn').disabled = !(amt > 0 && addState.cat);
   }
   function resetAddForm(){
-    addState = { group:null, cat:null, amount:'' };
+    const mode = addState.mode;
+    addState = { mode, group:null, cat:null, amount:'' };
     document.getElementById('amountDisplay').textContent = '0';
     document.getElementById('noteInput').value = '';
     document.querySelectorAll('.chip').forEach(b=>b.classList.remove('selected'));
@@ -1222,11 +1271,18 @@
   document.getElementById('saveBtn').addEventListener('click', async ()=>{
     const amt = parseFloat(addState.amount);
     if(!(amt>0) || !addState.cat) return;
+    const note = document.getElementById('noteInput').value.trim();
     try{
-      const d = await api('/api/expense','POST',{cat:addState.cat, group:addState.group, amt, note:document.getElementById('noteInput').value.trim()});
+      let d;
+      if(addState.mode==='income'){
+        d = await api('/api/income','POST',{cat:addState.cat, amt, note});
+        showToast(`Added ${fmt(amt)} income from ${addState.cat}`);
+      } else {
+        d = await api('/api/expense','POST',{cat:addState.cat, group:addState.group, amt, note});
+        showToast(`Added ${fmt(amt)} to ${addState.cat}`);
+      }
       syncFromServer(d);
       viewY = REAL.y; viewM = REAL.m;
-      showToast(`Added ${fmt(amt)} to ${addState.cat}`);
       resetAddForm();
       refreshDashboard(); renderLimits();
       switchScreen('dashboard');
@@ -1447,7 +1503,7 @@
     return hslToHex(nh, ns, nl);
   }
   function renderDonut(data){
-    const size=180, stroke=24, r=(size-stroke)/2, c=2*Math.PI*r;
+    const size=120, stroke=16, r=(size-stroke)/2, c=2*Math.PI*r;
     const total = data.reduce((s,d)=>s+d.value,0);
     let svg = `<svg viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${stroke}"/>`;
     if(total>0){
@@ -1466,7 +1522,7 @@
   function refreshInsights(){
     const segBtn = document.querySelector('.seg-btn.active[data-gran]');
     const gran = segBtn ? segBtn.dataset.gran : 'category';
-    const inView = txInView();
+    const inView = spendOnly(txInView());
     let data;
     if(gran==='category'){
       const map = {};

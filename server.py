@@ -251,6 +251,7 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/login': self.api_login,
                 '/api/logout': self.api_logout,
                 '/api/expense': self.api_add_expense,
+                '/api/income': self.api_add_income,
                 '/api/goal': self.api_add_goal,
                 '/api/category': self.api_add_category,
                 '/api/password': self.api_change_password,
@@ -559,6 +560,29 @@ class Handler(BaseHTTPRequestHandler):
             conn.execute(
                 'INSERT INTO transactions (user_id, cat, grp, amt, note, y, m, d) VALUES (?,?,?,?,?,?,?,?)',
                 (user['id'], cat, grp, amt, note, today.year, today.month - 1, today.day)
+            )
+            conn.commit()
+            self._send_json(200, self._full_state(conn, user))
+        finally:
+            conn.close()
+
+    def api_add_income(self):
+        conn = get_db()
+        try:
+            user = self._current_user(conn)
+            if not user:
+                raise ApiError(401, 'not signed in')
+            body = self._read_json()
+            cat = require_str(body, 'cat', 1, 60)
+            amt = require_num(body, 'amt', 0.01)
+            note = body.get('note') or ''
+            if not isinstance(note, str):
+                note = ''
+            note = note.strip()[:200]
+            today = datetime.now()
+            conn.execute(
+                'INSERT INTO transactions (user_id, cat, grp, amt, note, y, m, d) VALUES (?,?,?,?,?,?,?,?)',
+                (user['id'], cat, 'income', amt, note, today.year, today.month - 1, today.day)
             )
             conn.commit()
             self._send_json(200, self._full_state(conn, user))

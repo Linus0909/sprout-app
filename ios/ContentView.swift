@@ -4,7 +4,7 @@ import WebKit
 // IMPORTANT: replace this with your real deployed backend URL before
 // building — it must be a real https:// address (not 127.0.0.1, not a
 // Tailscale 100.x address). Apple's reviewers cannot reach either of those.
-private let sproutURL = URL(string: "https://REPLACE-WITH-YOUR-DEPLOYED-URL")!
+private let sproutURL = URL(string: "https://sprout-app-hiyu.onrender.com")!
 
 struct ContentView: View {
     var body: some View {
