@@ -4,7 +4,10 @@ import WebKit
 // IMPORTANT: replace this with your real deployed backend URL before
 // building — it must be a real https:// address (not 127.0.0.1, not a
 // Tailscale 100.x address). Apple's reviewers cannot reach either of those.
-private let sproutURL = URL(string: "https://sprout-app-hiyu.onrender.com")!
+// ?native=1 tells the web app it's running inside this native wrapper
+// (not a regular Safari tab), so it hides its own phone-mockup chrome —
+// the real device already has a notch and status bar of its own.
+private let sproutURL = URL(string: "https://sprout-app-hiyu.onrender.com/?native=1")!
 
 struct ContentView: View {
     var body: some View {

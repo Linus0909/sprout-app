@@ -1786,7 +1786,8 @@
     renderCategorySettings();
   }
 
-  if(window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)){
+  const inNativeApp = /[?&]native=1(&|$)/.test(location.search);
+  if(inNativeApp || window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)){
     document.documentElement.classList.add('standalone-mode');
   }
 
