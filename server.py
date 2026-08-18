@@ -109,7 +109,21 @@ def init_db():
         grp TEXT NOT NULL,
         name TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        grp TEXT NOT NULL,
+        amt REAL NOT NULL,
+        day INTEGER NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1
+    );
     ''')
+    # Lightweight migration for databases created before this column existed.
+    try:
+        conn.execute('ALTER TABLE transactions ADD COLUMN source_subscription_id INTEGER')
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -254,6 +268,7 @@ class Handler(BaseHTTPRequestHandler):
                 '/api/income': self.api_add_income,
                 '/api/goal': self.api_add_goal,
                 '/api/category': self.api_add_category,
+                '/api/subscription': self.api_add_subscription,
                 '/api/password': self.api_change_password,
                 '/api/import': self.api_import,
             }
@@ -286,6 +301,9 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r'^/api/category/(\d+)$', path)
             if m:
                 return self.api_delete_category(int(m.group(1)))
+            m = re.match(r'^/api/subscription/(\d+)$', path)
+            if m:
+                return self.api_delete_subscription(int(m.group(1)))
             if path == '/api/account':
                 return self.api_delete_account()
             self._send_json(404, {'error': 'not found'})
@@ -429,7 +447,30 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             conn.close()
 
+    def _ensure_subscriptions_billed(self, conn, user_id):
+        today = datetime.now()
+        y, m = today.year, today.month - 1
+        last_day = (datetime(today.year + (1 if today.month == 12 else 0),
+                              1 if today.month == 12 else today.month + 1, 1) - timedelta(days=1)).day
+        subs = conn.execute('SELECT * FROM subscriptions WHERE user_id = ? AND active = 1', (user_id,)).fetchall()
+        for sub in subs:
+            already = conn.execute(
+                'SELECT 1 FROM transactions WHERE user_id = ? AND source_subscription_id = ? AND y = ? AND m = ?',
+                (user_id, sub['id'], y, m)
+            ).fetchone()
+            if already:
+                continue
+            day = min(sub['day'], last_day)
+            conn.execute(
+                'INSERT INTO transactions (user_id, cat, grp, amt, note, y, m, d, source_subscription_id) '
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (user_id, sub['name'], sub['grp'], sub['amt'], 'Recurring subscription', y, m, day, sub['id'])
+            )
+        if subs:
+            conn.commit()
+
     def _full_state(self, conn, user):
+        self._ensure_subscriptions_billed(conn, user['id'])
         s = conn.execute('SELECT * FROM settings WHERE user_id = ?', (user['id'],)).fetchone()
         txs = conn.execute('SELECT id, cat, grp AS "group", amt, note, y, m, d FROM transactions '
                             'WHERE user_id = ? ORDER BY id', (user['id'],)).fetchall()
@@ -437,6 +478,8 @@ class Handler(BaseHTTPRequestHandler):
                               'WHERE user_id = ? ORDER BY id', (user['id'],)).fetchall()
         cats = conn.execute('SELECT id, grp AS "group", name FROM custom_categories '
                              'WHERE user_id = ? ORDER BY id', (user['id'],)).fetchall()
+        subs = conn.execute('SELECT id, name, grp AS "group", amt, day FROM subscriptions '
+                             'WHERE user_id = ? AND active = 1 ORDER BY day, id', (user['id'],)).fetchall()
         return {
             'username': user['username'],
             'settings': {
@@ -451,6 +494,7 @@ class Handler(BaseHTTPRequestHandler):
             'goals': [dict(r) for r in goals],
             'default_categories': DEFAULT_CATEGORIES,
             'custom_categories': [dict(r) for r in cats],
+            'subscriptions': [dict(r) for r in subs],
         }
 
     def api_update_settings(self):
@@ -639,6 +683,45 @@ class Handler(BaseHTTPRequestHandler):
                 'INSERT INTO transactions (user_id, cat, grp, amt, note, y, m, d) VALUES (?,?,?,?,?,?,?,?)',
                 (user['id'], goal['name'], 'savings', added, '', today.year, today.month - 1, today.day)
             )
+            conn.commit()
+            self._send_json(200, self._full_state(conn, user))
+        finally:
+            conn.close()
+
+    def api_add_subscription(self):
+        conn = get_db()
+        try:
+            user = self._current_user(conn)
+            if not user:
+                raise ApiError(401, 'not signed in')
+            body = self._read_json()
+            name = require_str(body, 'name', 1, 60)
+            grp = require_str(body, 'group', 1, 20)
+            if grp not in GROUPS:
+                raise ApiError(400, 'group must be needs, wants, or savings')
+            amt = require_num(body, 'amt', 0.01)
+            day = body.get('day', 1)
+            if not isinstance(day, (int, float)) or isinstance(day, bool):
+                raise ApiError(400, 'day must be a number')
+            day = max(1, min(31, int(day)))
+            conn.execute('INSERT INTO subscriptions (user_id, name, grp, amt, day, active) VALUES (?,?,?,?,?,1)',
+                         (user['id'], name, grp, amt, day))
+            conn.commit()
+            self._send_json(200, self._full_state(conn, user))
+        finally:
+            conn.close()
+
+    def api_delete_subscription(self, sub_id):
+        conn = get_db()
+        try:
+            user = self._current_user(conn)
+            if not user:
+                raise ApiError(401, 'not signed in')
+            row = conn.execute('SELECT id FROM subscriptions WHERE id = ? AND user_id = ?',
+                                (sub_id, user['id'])).fetchone()
+            if not row:
+                raise ApiError(404, 'subscription not found')
+            conn.execute('UPDATE subscriptions SET active = 0 WHERE id = ?', (sub_id,))
             conn.commit()
             self._send_json(200, self._full_state(conn, user))
         finally:

@@ -795,6 +795,13 @@
         </div>
 
         <div class="card">
+          <div class="section-head"><h2>Recurring subscriptions</h2></div>
+          <p class="hint" style="text-align:left; margin:6px 0 8px;">Billed automatically as an expense on the day you set, every month, until you delete it.</p>
+          <div id="subscriptionManage"></div>
+          <button type="button" class="new-goal-btn" id="newSubscriptionBtn" style="margin-top:8px;">+ Add subscription</button>
+        </div>
+
+        <div class="card">
           <div class="section-head"><h2>Your data</h2></div>
           <button type="button" class="link-btn" id="viewDataBtn">View personal data</button>
           <button type="button" class="link-btn" id="downloadDataBtn">Download my data (.json)</button>
@@ -865,6 +872,34 @@
           <div class="modal-row">
             <button type="button" class="save-btn ghost" id="contributeCancel">Cancel</button>
             <button type="button" class="save-btn" id="contributeConfirm">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-veil" id="subscriptionVeil">
+        <div class="modal">
+          <h3>New subscription</h3>
+          <div class="field">
+            <label for="subName">Name</label>
+            <input type="text" id="subName" placeholder="e.g. Netflix" />
+          </div>
+          <div class="modal-row">
+            <div class="field">
+              <label for="subAmount">Amount / month</label>
+              <input type="text" id="subAmount" inputmode="decimal" placeholder="15.99" />
+            </div>
+            <div class="field">
+              <label for="subDay">Billing day</label>
+              <input type="text" id="subDay" inputmode="numeric" placeholder="1" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Group</label>
+            <div class="chips" id="subGroupChips"></div>
+          </div>
+          <div class="modal-row">
+            <button type="button" class="save-btn ghost" id="subCancel">Cancel</button>
+            <button type="button" class="save-btn" id="subCreate">Add subscription</button>
           </div>
         </div>
       </div>
@@ -942,6 +977,7 @@
   let session = null;
   let transactions = [];
   let goals = [];
+  let subscriptions = [];
   let addState = { mode:'expense', group:null, cat:null, amount:'' };
   const incomeCategories = ['Paycheck','Bonus','Gift','Side Income','Refund','Other'];
   function round50(n){ return Math.max(50, Math.round(n/50)*50); }
@@ -976,6 +1012,7 @@
       customCategories = { needs:[], wants:[], savings:[] };
       d.custom_categories.forEach(c=>{ if(customCategories[c.group]) customCategories[c.group].push({id:c.id, name:c.name}); });
     }
+    if(d.subscriptions) subscriptions = d.subscriptions.map(s=>({...s}));
   }
 
   async function loadData(){
@@ -1221,6 +1258,67 @@
       });
     });
   }
+
+  function ordinal(n){
+    const s=['th','st','nd','rd'], v=n%100;
+    return n+(s[(v-20)%10]||s[v]||s[0]);
+  }
+  function renderSubscriptionSettings(){
+    const wrap = document.getElementById('subscriptionManage');
+    wrap.innerHTML = subscriptions.map(s=>
+      `<div class="cat-manage-row"><span>${esc(s.name)} — ${fmt(s.amt)}/mo, ${ordinal(s.day)} <span class="hint" style="display:inline;">(${groups[s.group].label})</span></span><button type="button" class="cat-del" data-subdel="${s.id}">Delete</button></div>`
+    ).join('') || '<p class="hint" style="text-align:left; padding:2px 0;">No subscriptions yet.</p>';
+    wrap.querySelectorAll('[data-subdel]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        try{
+          const d = await api('/api/subscription/'+btn.dataset.subdel, 'DELETE');
+          syncFromServer(d);
+          renderSubscriptionSettings();
+          refreshDashboard(); renderLimits();
+          showToast('Subscription deleted');
+        }catch(e){ showToast(e.message); }
+      });
+    });
+  }
+
+  let pickedSubGroup = 'wants';
+  function renderSubGroupChips(){
+    const wrap = document.getElementById('subGroupChips');
+    wrap.innerHTML = Object.keys(groups).map(g=>
+      `<button type="button" class="chip${g===pickedSubGroup?' selected':''}" data-subgroup="${g}" style="color:${groups[g].hex}">${groups[g].label}</button>`
+    ).join('');
+    wrap.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        pickedSubGroup = btn.dataset.subgroup;
+        renderSubGroupChips();
+      });
+    });
+  }
+  document.getElementById('newSubscriptionBtn').addEventListener('click', ()=>{
+    document.getElementById('subName').value = '';
+    document.getElementById('subAmount').value = '';
+    document.getElementById('subDay').value = '1';
+    pickedSubGroup = 'wants';
+    renderSubGroupChips();
+    document.getElementById('subscriptionVeil').classList.add('open');
+  });
+  document.getElementById('subCancel').addEventListener('click', ()=>{
+    document.getElementById('subscriptionVeil').classList.remove('open');
+  });
+  document.getElementById('subCreate').addEventListener('click', async ()=>{
+    const name = document.getElementById('subName').value.trim();
+    const amt = parseNum(document.getElementById('subAmount').value);
+    const day = Math.max(1, Math.min(31, parseInt(document.getElementById('subDay').value) || 1));
+    if(!name || !(amt>0)) { showToast('Enter a name and an amount'); return; }
+    try{
+      const d = await api('/api/subscription','POST',{name, amt, day, group:pickedSubGroup});
+      syncFromServer(d);
+      document.getElementById('subscriptionVeil').classList.remove('open');
+      renderSubscriptionSettings();
+      refreshDashboard(); renderLimits();
+      showToast(`${name} added`);
+    }catch(e){ showToast(e.message); }
+  });
 
   function openNewCategoryPrompt(group){
     const name = (prompt(`New ${groups[group].label} category name:`) || '').trim();
@@ -1790,6 +1888,7 @@
     renderLimits();
     renderGoals();
     renderCategorySettings();
+    renderSubscriptionSettings();
   }
 
   const inNativeApp = /[?&]native=1(&|$)/.test(location.search);
