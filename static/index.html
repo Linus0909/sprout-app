@@ -168,25 +168,25 @@
     flex-direction:column;
     height:100%;
     overflow-y:auto;
-    padding:10px 14px 6px;
+    padding:34px 14px 6px;
     gap:9px;
   }
   .screen.active{ display:flex; }
   .screen::-webkit-scrollbar{ width:0; }
 
-  .gear-btn{
-    position:absolute; top:10px; right:10px; z-index:12;
+  /* Corner icons float above the screen's own top padding (34px), so
+     content always starts clear below them — no per-row horizontal
+     clearance needed, on any screen, regardless of title length. */
+  .gear-btn, .calendar-btn{
+    position:absolute; top:10px; z-index:12;
     width:28px; height:28px; border-radius:50%;
     background:var(--surface); border:1px solid var(--line);
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; box-shadow:var(--shadow-card); font-size:.8rem;
   }
-  .gear-btn[hidden]{ display:none; }
-  /* Clearance so top-of-screen controls never sit under the floating gear button.
-     month-row gets matching left padding too, so its centered date stays
-     visually centered on the screen rather than skewed by one-sided padding. */
-  .add-head{ padding-right:34px; }
-  .month-row{ padding:0 34px; }
+  .gear-btn{ right:10px; }
+  .calendar-btn{ left:10px; }
+  .gear-btn[hidden], .calendar-btn[hidden]{ display:none; }
 
   .tabbar{
     display:flex;
@@ -489,6 +489,24 @@
   .chart-legend{ display:flex; justify-content:center; gap:14px; margin:2px 0 0; font-size:.6rem; color:var(--muted); }
   .chart-legend span{ display:flex; align-items:center; gap:4px; }
 
+  .cal-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:6px; }
+  .cal-weekdays span{ text-align:center; font-size:.56rem; font-weight:700; color:var(--muted); text-transform:uppercase; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:3px; }
+  .cal-day{
+    aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:.68rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink);
+    background:var(--surface-alt); border:1px solid var(--line);
+  }
+  .cal-day.empty{ visibility:hidden; }
+  .cal-day.future{ color:var(--muted); font-weight:600; background:var(--surface-alt); }
+  .cal-day.green{ background:var(--sage-soft); border-color:transparent; color:var(--sage); }
+  .cal-day.yellow{ background:var(--tan-soft); border-color:transparent; color:var(--tan); }
+  .cal-day.red{ background:var(--danger-soft); border-color:transparent; color:var(--danger); }
+  .cal-day.today{ box-shadow:0 0 0 1.5px var(--brand) inset; }
+  .cal-legend{ display:flex; justify-content:center; gap:12px; margin-top:10px; font-size:.6rem; color:var(--muted); }
+  .cal-legend span{ display:flex; align-items:center; gap:4px; }
+  .cal-legend .dot{ width:8px; height:8px; }
+
   .auth-error{ color:var(--danger); font-size:.78rem; text-align:center; display:none; }
   .settings-danger{ border:1px solid var(--danger); }
 
@@ -542,6 +560,7 @@
 
     <div class="screen-area">
       <button class="gear-btn" id="gearBtn" title="Settings" aria-label="Settings" hidden>⚙️</button>
+      <button class="calendar-btn" id="calendarBtn" title="Spending Calendar" aria-label="Spending Calendar" hidden>🗓️</button>
 
       <!-- AUTH -->
       <div class="onboarding" id="authScreen">
@@ -793,6 +812,35 @@
           <p class="hint" style="margin-top:2px;">Income includes your set monthly income, plus anything logged as Income.</p>
           <div class="card callout-card" id="incomeExpenseCallout"></div>
         </div>
+      </section>
+
+      <!-- SPENDING CALENDAR -->
+      <section class="screen" data-screen="calendar">
+        <div class="section-head">
+          <div class="screen-title">Spending calendar</div>
+          <button type="button" class="link-btn" id="calendarBackBtn">Close</button>
+        </div>
+        <div class="month-row" style="padding:0;">
+          <button class="navbtn" id="calPrevBtn" title="Previous month" aria-label="Previous month">‹</button>
+          <div style="text-align:center;">
+            <div class="eyebrow">Needs &amp; Wants vs. daily target</div>
+            <div class="screen-title" id="calMonthLabel" style="font-size:.95rem;">&nbsp;</div>
+          </div>
+          <button class="navbtn" id="calNextBtn" title="Next month" aria-label="Next month">›</button>
+        </div>
+        <div class="card">
+          <div class="cal-weekdays">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend">
+            <span><i class="dot" style="background:var(--sage);"></i>Under</span>
+            <span><i class="dot" style="background:var(--tan);"></i>On target (±5%)</span>
+            <span><i class="dot" style="background:var(--danger);"></i>Over</span>
+          </div>
+        </div>
+        <p class="hint" id="calTargets"></p>
+        <p class="hint" id="calDayDetail" style="min-height:1.2em;"></p>
       </section>
 
       <!-- SETTINGS -->
@@ -1794,6 +1842,77 @@
     if(btn) setInsightsTab(btn.dataset.itab);
   });
 
+  /* ---------- SPENDING CALENDAR ---------- */
+  let calY = REAL.y, calM = REAL.m;
+  const VARIANCE = 0.05; // ±5% band around each category's daily target counts as "on target"
+  function dayStatus(actual, target){
+    if(target<=0) return actual>0 ? 'red' : 'green';
+    if(actual <= target*(1-VARIANCE)) return 'green';
+    if(actual <= target*(1+VARIANCE)) return 'yellow';
+    return 'red';
+  }
+  const STATUS_RANK = {green:0, yellow:1, red:2};
+  function worseStatus(a,b){ return STATUS_RANK[a]>=STATUS_RANK[b] ? a : b; }
+
+  function renderCalendar(){
+    document.getElementById('calMonthLabel').textContent = monthLabelOf(calY, calM);
+    const isFutureMonth = (calY>REAL.y) || (calY===REAL.y && calM>REAL.m);
+    document.getElementById('calNextBtn').disabled = (calY===REAL.y && calM===REAL.m);
+
+    const dim = daysInMonth(calY, calM);
+    const needsDaily = groups.needs.limit / dim;
+    const wantsDaily = groups.wants.limit / dim;
+    document.getElementById('calTargets').textContent =
+      `Daily targets — Needs: ${fmt0(needsDaily)} · Wants: ${fmt0(wantsDaily)} (±5% counts as on target)`;
+
+    const firstWeekday = new Date(calY, calM, 1).getDay();
+    const monthTx = transactions.filter(t=>t.y===calY && t.m===calM);
+    const startYM = window.__accountStartYM;
+    const thisYM = calY*12+calM;
+    const beforeAccount = startYM!=null && thisYM<startYM;
+
+    let html = '';
+    for(let i=0;i<firstWeekday;i++) html += `<div class="cal-day empty"></div>`;
+    for(let day=1; day<=dim; day++){
+      const isFuture = isFutureMonth || (calY===REAL.y && calM===REAL.m && day>REAL.d);
+      const isToday = (calY===REAL.y && calM===REAL.m && day===REAL.d);
+      if(isFuture || beforeAccount){
+        html += `<div class="cal-day future${isToday?' today':''}">${day}</div>`;
+        continue;
+      }
+      const needsSpent = monthTx.filter(t=>t.d===day && t.group==='needs').reduce((s,t)=>s+t.amt,0);
+      const wantsSpent = monthTx.filter(t=>t.d===day && t.group==='wants').reduce((s,t)=>s+t.amt,0);
+      const status = worseStatus(dayStatus(needsSpent, needsDaily), dayStatus(wantsSpent, wantsDaily));
+      html += `<div class="cal-day ${status}${isToday?' today':''}" data-calday="${day}" data-needs="${needsSpent}" data-wants="${wantsSpent}">${day}</div>`;
+    }
+    document.getElementById('calGrid').innerHTML = html;
+    document.getElementById('calDayDetail').textContent = '';
+
+    document.querySelectorAll('#calGrid [data-calday]').forEach(cell=>{
+      cell.style.cursor = 'pointer';
+      cell.addEventListener('click', ()=>{
+        const day = cell.dataset.calday;
+        const needsSpent = parseFloat(cell.dataset.needs), wantsSpent = parseFloat(cell.dataset.wants);
+        document.getElementById('calDayDetail').textContent =
+          `${monthLabelOf(calY,calM).split(' ')[0]} ${day} — Needs ${fmt0(needsSpent)} (target ${fmt0(needsDaily)}) · Wants ${fmt0(wantsSpent)} (target ${fmt0(wantsDaily)})`;
+      });
+    });
+  }
+  document.getElementById('calendarBtn').addEventListener('click', ()=>{ switchScreen('calendar'); });
+  document.getElementById('calendarBackBtn').addEventListener('click', ()=>{
+    const active = document.querySelector('.tab.active');
+    switchScreen(active ? active.dataset.target : 'dashboard');
+  });
+  document.getElementById('calPrevBtn').addEventListener('click', ()=>{
+    calM--; if(calM<0){ calM=11; calY--; }
+    renderCalendar();
+  });
+  document.getElementById('calNextBtn').addEventListener('click', ()=>{
+    if(calY===REAL.y && calM===REAL.m) return;
+    calM++; if(calM>11){ calM=0; calY++; }
+    renderCalendar();
+  });
+
   /* ---------- ONBOARDING ---------- */
   const ob = { step:0, focus:null, income:0, saved:0 };
   const focusOptions = [
@@ -1957,11 +2076,14 @@
   /* ---------- TAB NAV ---------- */
   function switchScreen(name){
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.dataset.screen===name));
-    if(name!=='settings'){
+    if(name!=='settings' && name!=='calendar'){
       document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.target===name));
     }
     const gear = document.getElementById('gearBtn');
     if(!gear.dataset.appHidden) gear.hidden = (name==='settings');
+    const cal = document.getElementById('calendarBtn');
+    if(!cal.dataset.appHidden) cal.hidden = (name==='calendar');
+    if(name==='calendar') renderCalendar();
   }
   document.getElementById('tabbar').addEventListener('click', e=>{
     const btn = e.target.closest('.tab');
@@ -1996,12 +2118,14 @@
     const obEl = document.getElementById('onboarding');
     const tabbar = document.getElementById('tabbar');
     const gear = document.getElementById('gearBtn');
+    const cal = document.getElementById('calendarBtn');
 
     if(!session){
       authEl.classList.remove('hidden');
       obEl.classList.add('hidden');
       tabbar.style.opacity = '0'; tabbar.style.pointerEvents = 'none';
       gear.dataset.appHidden = '1'; gear.hidden = true;
+      cal.dataset.appHidden = '1'; cal.hidden = true;
       return;
     }
     authEl.classList.add('hidden');
@@ -2010,13 +2134,16 @@
       obEl.classList.remove('hidden');
       tabbar.style.opacity = '0'; tabbar.style.pointerEvents = 'none';
       gear.dataset.appHidden = '1'; gear.hidden = true;
+      cal.dataset.appHidden = '1'; cal.hidden = true;
       return;
     }
     obEl.classList.add('hidden');
     tabbar.style.opacity = '1'; tabbar.style.pointerEvents = 'auto';
     delete gear.dataset.appHidden;
+    delete cal.dataset.appHidden;
     const activeScreen = document.querySelector('.screen.active');
     gear.hidden = !!(activeScreen && activeScreen.dataset.screen==='settings');
+    cal.hidden = !!(activeScreen && activeScreen.dataset.screen==='calendar');
     document.getElementById('incomeInput').value = fmtInput(window.__income);
     document.getElementById('settingsUsername').textContent = session.username;
     setThemeChoice(window.__theme==='light'||window.__theme==='dark' ? window.__theme : 'auto');
@@ -2027,6 +2154,7 @@
     renderGoals();
     renderCategorySettings();
     renderSubscriptionSettings();
+    if(activeScreen && activeScreen.dataset.screen==='calendar') renderCalendar();
   }
 
   const inNativeApp = /[?&]native=1(&|$)/.test(location.search);
