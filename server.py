@@ -471,6 +471,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _full_state(self, conn, user):
         self._ensure_subscriptions_billed(conn, user['id'])
+        u = conn.execute('SELECT created_at FROM users WHERE id = ?', (user['id'],)).fetchone()
         s = conn.execute('SELECT * FROM settings WHERE user_id = ?', (user['id'],)).fetchone()
         txs = conn.execute('SELECT id, cat, grp AS "group", amt, note, y, m, d FROM transactions '
                             'WHERE user_id = ? ORDER BY id', (user['id'],)).fetchall()
@@ -482,6 +483,7 @@ class Handler(BaseHTTPRequestHandler):
                              'WHERE user_id = ? AND active = 1 ORDER BY day, id', (user['id'],)).fetchall()
         return {
             'username': user['username'],
+            'created_at': u['created_at'],
             'settings': {
                 'onboarding_done': bool(s['onboarding_done']),
                 'theme': s['theme'],

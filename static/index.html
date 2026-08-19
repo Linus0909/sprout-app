@@ -1037,6 +1037,11 @@
     window.__onboardingDone = !!d.settings.onboarding_done;
     window.__income = d.settings.income;
     window.__theme = d.settings.theme;
+    window.__accountStartYM = null;
+    if(d.created_at){
+      const c = new Date(d.created_at);
+      if(!isNaN(c)) window.__accountStartYM = c.getFullYear()*12 + c.getMonth();
+    }
     if(d.custom_categories){
       customCategories = { needs:[], wants:[], savings:[] };
       d.custom_categories.forEach(c=>{ if(customCategories[c.group]) customCategories[c.group].push({id:c.id, name:c.name}); });
@@ -1737,10 +1742,13 @@
   }
   function renderIncomeExpenseChart(){
     const baseline = window.__income || 0; // your set monthly income — logged Income entries add on top of this
+    const startYM = window.__accountStartYM; // don't backdate income to before you actually joined
     const data = lastNMonths(6).map(({y,m})=>{
       const mt=transactions.filter(t=>t.y===y&&t.m===m);
+      const ym = y*12+m;
+      const monthBaseline = (startYM==null || ym>=startYM) ? baseline : 0;
       return { y, m,
-        income: baseline + mt.filter(t=>t.group==='income').reduce((s,t)=>s+t.amt,0),
+        income: monthBaseline + mt.filter(t=>t.group==='income').reduce((s,t)=>s+t.amt,0),
         expense: mt.filter(t=>t.group!=='income').reduce((s,t)=>s+t.amt,0)
       };
     });
