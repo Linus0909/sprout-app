@@ -790,6 +790,7 @@
         <div id="insightsIncomeExpense" hidden>
           <div class="chart-wrap" id="incomeExpenseChart"></div>
           <div class="chart-legend" id="incomeExpenseLegend"></div>
+          <p class="hint" style="margin-top:2px;">Income includes your set monthly income, plus anything logged as Income.</p>
           <div class="card callout-card" id="incomeExpenseCallout"></div>
         </div>
       </section>
@@ -1735,10 +1736,11 @@
     }
   }
   function renderIncomeExpenseChart(){
+    const baseline = window.__income || 0; // your set monthly income — logged Income entries add on top of this
     const data = lastNMonths(6).map(({y,m})=>{
       const mt=transactions.filter(t=>t.y===y&&t.m===m);
       return { y, m,
-        income: mt.filter(t=>t.group==='income').reduce((s,t)=>s+t.amt,0),
+        income: baseline + mt.filter(t=>t.group==='income').reduce((s,t)=>s+t.amt,0),
         expense: mt.filter(t=>t.group!=='income').reduce((s,t)=>s+t.amt,0)
       };
     });
