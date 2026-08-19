@@ -483,6 +483,12 @@
   .legend-row .lp{ font-size:.62rem; color:var(--muted); width:30px; text-align:right; }
   .legend-row .la{ font-size:.7rem; font-weight:700; font-variant-numeric:tabular-nums; width:58px; text-align:right; }
 
+  .chart-wrap{ margin:4px 0 2px; }
+  .bar-chart{ width:100%; height:auto; display:block; }
+  .bar-chart text{ font-family:var(--font-body); fill:var(--muted); }
+  .chart-legend{ display:flex; justify-content:center; gap:14px; margin:2px 0 0; font-size:.6rem; color:var(--muted); }
+  .chart-legend span{ display:flex; align-items:center; gap:4px; }
+
   .auth-error{ color:var(--danger); font-size:.78rem; text-align:center; display:none; }
   .settings-danger{ border:1px solid var(--danger); }
 
@@ -759,14 +765,33 @@
 
       <!-- INSIGHTS -->
       <section class="screen" data-screen="insights">
-        <div class="screen-title">Where it goes</div>
-        <div class="seg-toggle" id="segToggle">
-          <button type="button" class="seg-btn active" data-gran="category">By category</button>
-          <button type="button" class="seg-btn" data-gran="group">By group</button>
+        <div class="screen-title">Insights</div>
+        <div class="seg-toggle" id="insightsTabToggle">
+          <button type="button" class="seg-btn active" data-itab="breakdown">Breakdown</button>
+          <button type="button" class="seg-btn" data-itab="trend">Trend</button>
+          <button type="button" class="seg-btn" data-itab="incomeexpense">Income</button>
         </div>
-        <div class="donut-wrap" id="donutWrap"></div>
-        <div class="card callout-card" id="calloutCard"></div>
-        <div class="card" id="legendList" style="padding:4px 14px;"></div>
+
+        <div id="insightsBreakdown">
+          <div class="seg-toggle" id="segToggle">
+            <button type="button" class="seg-btn active" data-gran="category">By category</button>
+            <button type="button" class="seg-btn" data-gran="group">By group</button>
+          </div>
+          <div class="donut-wrap" id="donutWrap"></div>
+          <div class="card callout-card" id="calloutCard"></div>
+          <div class="card" id="legendList" style="padding:4px 14px;"></div>
+        </div>
+
+        <div id="insightsTrend" hidden>
+          <div class="chart-wrap" id="trendChart"></div>
+          <div class="card callout-card" id="trendCallout"></div>
+        </div>
+
+        <div id="insightsIncomeExpense" hidden>
+          <div class="chart-wrap" id="incomeExpenseChart"></div>
+          <div class="chart-legend" id="incomeExpenseLegend"></div>
+          <div class="card callout-card" id="incomeExpenseCallout"></div>
+        </div>
       </section>
 
       <!-- SETTINGS -->
@@ -1166,7 +1191,14 @@
     }).join('') || `<p class="hint" style="padding:12px 0;">🌱 Nothing logged ${isCurrent?'yet':'this month'} — ${isCurrent?'tap Add to log your first expense.':'browse another month or add one now.'}</p>`;
 
     refreshSuggestion();
-    refreshInsights();
+    refreshActiveInsightsTab();
+  }
+  function refreshActiveInsightsTab(){
+    const activeTab = document.querySelector('#insightsTabToggle .seg-btn.active');
+    const tab = activeTab ? activeTab.dataset.itab : 'breakdown';
+    if(tab==='trend') renderTrendChart();
+    else if(tab==='incomeexpense') renderIncomeExpenseChart();
+    else refreshInsights();
   }
   function refreshSuggestion(){
     const income = parseNum(document.getElementById('incomeInput').value);
@@ -1657,6 +1689,99 @@
     document.querySelectorAll('#segToggle .seg-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     refreshInsights();
+  });
+
+  /* ---------- TREND / INCOME-VS-EXPENSE CHARTS ---------- */
+  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function lastNMonths(n){
+    const arr = []; let y = REAL.y, m = REAL.m;
+    for(let i=0;i<n;i++){ arr.unshift({y,m}); m--; if(m<0){ m=11; y--; } }
+    return arr;
+  }
+  function animateBars(wrap){
+    requestAnimationFrame(()=>{
+      wrap.querySelectorAll('.tbar').forEach(bar=>{
+        const h = parseFloat(bar.dataset.final), y0 = parseFloat(bar.dataset.y0);
+        bar.style.height = h; bar.style.y = (y0 - h);
+      });
+    });
+  }
+  function renderTrendChart(){
+    const data = lastNMonths(6).map(({y,m})=>({
+      y, m, total: transactions.filter(t=>t.y===y && t.m===m && t.group!=='income').reduce((s,t)=>s+t.amt,0)
+    }));
+    const W=300,H=110,base=86,top=8,n=data.length,gap=10;
+    const barW=(W-gap*(n+1))/n, max=Math.max(1,...data.map(d=>d.total));
+    let svg=`<svg class="bar-chart" viewBox="0 0 ${W} ${H}">`;
+    data.forEach((d,i)=>{
+      const x=gap+i*(barW+gap), h=((base-top)*(d.total/max)).toFixed(1);
+      svg+=`<rect class="tbar" data-final="${h}" data-y0="${base}" x="${x.toFixed(1)}" y="${base}" width="${barW.toFixed(1)}" height="0" rx="4" fill="var(--brand)" style="transition:height .6s ease, y .6s ease;"/>`;
+      svg+=`<text x="${(x+barW/2).toFixed(1)}" y="${base+13}" font-size="8" text-anchor="middle">${MONTH_ABBR[d.m]}</text>`;
+    });
+    svg+=`</svg>`;
+    const wrap=document.getElementById('trendChart');
+    wrap.innerHTML=svg;
+    animateBars(wrap);
+
+    const cur=data[data.length-1].total, prev=data.length>1?data[data.length-2].total:0;
+    const callout=document.getElementById('trendCallout');
+    if(data.every(d=>d.total===0)){
+      callout.innerHTML=`<div class="ce">📈</div><div class="ct">Log a few expenses to start seeing your spending trend over time.</div>`;
+    } else if(prev===0){
+      callout.innerHTML=`<div class="ce">📈</div><div class="ct">You've spent <b>${fmt0(cur)}</b> this month so far.</div>`;
+    } else {
+      const pct=Math.round(((cur-prev)/prev)*100), dir=pct>=0?'up':'down';
+      callout.innerHTML=`<div class="ce">${pct>=0?'📈':'📉'}</div><div class="ct">You've spent <b>${fmt0(cur)}</b> this month, ${dir} ${Math.abs(pct)}% from last month.</div>`;
+    }
+  }
+  function renderIncomeExpenseChart(){
+    const data = lastNMonths(6).map(({y,m})=>{
+      const mt=transactions.filter(t=>t.y===y&&t.m===m);
+      return { y, m,
+        income: mt.filter(t=>t.group==='income').reduce((s,t)=>s+t.amt,0),
+        expense: mt.filter(t=>t.group!=='income').reduce((s,t)=>s+t.amt,0)
+      };
+    });
+    const W=300,H=110,base=86,top=8,n=data.length,gGap=10;
+    const groupW=(W-gGap*(n+1))/n, barW=(groupW-3)/2;
+    const max=Math.max(1,...data.map(d=>Math.max(d.income,d.expense)));
+    let svg=`<svg class="bar-chart" viewBox="0 0 ${W} ${H}">`;
+    data.forEach((d,i)=>{
+      const gx=gGap+i*(groupW+gGap);
+      const hi=((base-top)*(d.income/max)).toFixed(1), he=((base-top)*(d.expense/max)).toFixed(1);
+      svg+=`<rect class="tbar" data-final="${hi}" data-y0="${base}" x="${gx.toFixed(1)}" y="${base}" width="${barW.toFixed(1)}" height="0" rx="3" fill="var(--brand)" style="transition:height .6s ease, y .6s ease;"/>`;
+      svg+=`<rect class="tbar" data-final="${he}" data-y0="${base}" x="${(gx+barW+3).toFixed(1)}" y="${base}" width="${barW.toFixed(1)}" height="0" rx="3" fill="var(--tan)" style="transition:height .6s ease, y .6s ease;"/>`;
+      svg+=`<text x="${(gx+groupW/2).toFixed(1)}" y="${base+13}" font-size="8" text-anchor="middle">${MONTH_ABBR[d.m]}</text>`;
+    });
+    svg+=`</svg>`;
+    const wrap=document.getElementById('incomeExpenseChart');
+    wrap.innerHTML=svg;
+    animateBars(wrap);
+    document.getElementById('incomeExpenseLegend').innerHTML =
+      `<span><i class="dot" style="background:var(--brand);"></i>Income</span><span><i class="dot" style="background:var(--tan);"></i>Expense</span>`;
+
+    const cur=data[data.length-1], net=cur.income-cur.expense;
+    const callout=document.getElementById('incomeExpenseCallout');
+    if(cur.income===0 && cur.expense===0){
+      callout.innerHTML=`<div class="ce">💰</div><div class="ct">Log income and expenses to see how they compare each month.</div>`;
+    } else if(net>=0){
+      callout.innerHTML=`<div class="ce">🟢</div><div class="ct">You're <b>${fmt0(net)}</b> ahead this month — income beat spending.</div>`;
+    } else {
+      callout.innerHTML=`<div class="ce">🔴</div><div class="ct">You've spent <b>${fmt0(Math.abs(net))}</b> more than you've brought in this month.</div>`;
+    }
+  }
+  function setInsightsTab(tab){
+    document.querySelectorAll('#insightsTabToggle .seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.itab===tab));
+    document.getElementById('insightsBreakdown').hidden = tab!=='breakdown';
+    document.getElementById('insightsTrend').hidden = tab!=='trend';
+    document.getElementById('insightsIncomeExpense').hidden = tab!=='incomeexpense';
+    if(tab==='trend') renderTrendChart();
+    else if(tab==='incomeexpense') renderIncomeExpenseChart();
+    else refreshInsights();
+  }
+  document.getElementById('insightsTabToggle').addEventListener('click', e=>{
+    const btn = e.target.closest('.seg-btn');
+    if(btn) setInsightsTab(btn.dataset.itab);
   });
 
   /* ---------- ONBOARDING ---------- */
